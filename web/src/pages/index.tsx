@@ -3,6 +3,7 @@ import {Inter} from "next/font/google";
 import Table from "react-bootstrap/Table";
 import {Alert, Container} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
+import * as querystring from "node:querystring";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -23,7 +24,7 @@ type TGetServerSideProps = {
 
 export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promise<{ props: TGetServerSideProps }> => {
   try {
-    const res = await fetch("http://localhost:3000/users", {method: 'GET'})
+    const res = await fetch(`http://localhost:3000/users?${querystring.stringify(ctx.query)}`, {method: 'GET'})
     if (!res.ok) {
       return {props: {statusCode: res.status, users: []}}
     }

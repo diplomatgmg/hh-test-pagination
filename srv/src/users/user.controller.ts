@@ -1,5 +1,5 @@
 import { UserService } from './users.service';
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Logger } from '@nestjs/common';
 import { UsersResponseDto } from './users.response.dto';
 
 @Controller('users')
@@ -8,9 +8,9 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get()
-  async getAllUsers() {
-    this.logger.log('Get all users');
-    const users = await this.userService.findAll();
+  async getAllUsers(@Query('page') page = 1) {
+    this.logger.log(`Get all users. page = ${page}`);
+    const users = await this.userService.findAll(page);
     return users.map((user) => UsersResponseDto.fromUsersEntity(user));
   }
 }
