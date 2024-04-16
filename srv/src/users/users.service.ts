@@ -21,4 +21,8 @@ export class UserService {
       take: PAGINATION_LIMIT,
     });
   }
+
+  async getTotalPages(): Promise<number> {
+    return (await this.usersRepo.count()) / PAGINATION_LIMIT;
+  }
 }

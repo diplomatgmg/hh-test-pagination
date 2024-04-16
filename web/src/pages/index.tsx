@@ -7,6 +7,7 @@ import {GetServerSideProps, GetServerSidePropsContext} from "next";
 import * as querystring from "node:querystring";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
+import {getPaginationNumbers} from "@/pages/utils";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -26,6 +27,7 @@ type TQueryParams = {
 type TGetServerSideProps = {
   statusCode: number
   users: TUserItem[]
+  totalPages: number
   queryParams?: TQueryParams
 }
 
@@ -34,39 +36,41 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
   try {
     const res = await fetch(`http://localhost:3000/users?${querystring.stringify(ctx.query)}`, {method: 'GET'})
     if (!res.ok) {
-      return {props: {statusCode: res.status, users: []}}
+      return {props: {statusCode: res.status, totalPages: 0, users: []}}
     }
 
+    const {users, totalPages} = await res.json()
+
     return {
-      props: {statusCode: 200, users: await res.json(), queryParams: ctx.query}
+      props: {statusCode: 200, users, totalPages, queryParams: ctx.query}
     }
   } catch (e) {
-    return {props: {statusCode: 500, users: []}}
+    return {props: {statusCode: 500, totalPages: 0, users: []}}
   }
 }) satisfies GetServerSideProps<TGetServerSideProps>
 
 
-export default function Home({statusCode, users, queryParams}: TGetServerSideProps) {
-  const [page, setPage] = useState<number>(queryParams?.page ? Number(queryParams.page) : 1)
+export default function Home({statusCode, totalPages, users, queryParams}: TGetServerSideProps) {
+  const [currentPage, setCurrentPage] = useState<number>(queryParams?.page ? Number(queryParams.page) : 1)
   const router = useRouter()
 
   useEffect(() => {
     void router.replace({
       pathname: router.pathname,
-      query: {...router.query, page}
+      query: {...router.query, page: currentPage}
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [currentPage]);
 
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
   }
 
-  const paginationNumbers = Array.from({length: 10}, (_, index) => index + 1)
-
   const handleChangePage = (newPage: number) => (): void => {
-    setPage(newPage)
+    setCurrentPage(newPage)
   }
+
+  const paginationNumbers = getPaginationNumbers(currentPage, totalPages)
 
   return (
     <>
@@ -109,16 +113,20 @@ export default function Home({statusCode, users, queryParams}: TGetServerSidePro
           </Table>
 
           <Pagination>
-            <Pagination.First/>
-            <Pagination.Prev/>
+            <Pagination.First onClick={handleChangePage(1)}
+                              disabled={currentPage === 1}/>
+            <Pagination.Prev onClick={handleChangePage(currentPage - 1)}
+                             disabled={currentPage === 1}/>
             {paginationNumbers.map(number => (
               <Pagination.Item
                 key={number}
                 onClick={handleChangePage(number)}
-                active={page === number}>{number}</Pagination.Item>
+                active={currentPage === number}>{number}</Pagination.Item>
             ))}
-            <Pagination.Next/>
-            <Pagination.Last/>
+            <Pagination.Next onClick={handleChangePage(currentPage + 1)}
+                             disabled={currentPage === totalPages}/>
+            <Pagination.Last onClick={handleChangePage(totalPages)}
+                             disabled={currentPage === totalPages}/>
           </Pagination>
 
         </Container>
