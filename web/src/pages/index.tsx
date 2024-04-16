@@ -1,9 +1,12 @@
 import Head from "next/head";
 import {Inter} from "next/font/google";
 import Table from "react-bootstrap/Table";
+import Pagination from 'react-bootstrap/Pagination';
 import {Alert, Container} from "react-bootstrap";
 import {GetServerSideProps, GetServerSidePropsContext} from "next";
 import * as querystring from "node:querystring";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/router";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -16,9 +19,14 @@ type TUserItem = {
   updatedAt: string
 }
 
+type TQueryParams = {
+  page?: string;
+}
+
 type TGetServerSideProps = {
   statusCode: number
   users: TUserItem[]
+  queryParams?: TQueryParams
 }
 
 
@@ -30,7 +38,7 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
     }
 
     return {
-      props: {statusCode: 200, users: await res.json()}
+      props: {statusCode: 200, users: await res.json(), queryParams: ctx.query}
     }
   } catch (e) {
     return {props: {statusCode: 500, users: []}}
@@ -38,9 +46,26 @@ export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promi
 }) satisfies GetServerSideProps<TGetServerSideProps>
 
 
-export default function Home({statusCode, users}: TGetServerSideProps) {
+export default function Home({statusCode, users, queryParams}: TGetServerSideProps) {
+  const [page, setPage] = useState<number>(queryParams?.page ? Number(queryParams.page) : 1)
+  const router = useRouter()
+
+  useEffect(() => {
+    void router.replace({
+      pathname: router.pathname,
+      query: {...router.query, page}
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
   if (statusCode !== 200) {
     return <Alert variant={'danger'}>Ошибка {statusCode} при загрузке данных</Alert>
+  }
+
+  const paginationNumbers = Array.from({length: 10}, (_, index) => index + 1)
+
+  const handleChangePage = (newPage: number) => (): void => {
+    setPage(newPage)
   }
 
   return (
@@ -83,7 +108,18 @@ export default function Home({statusCode, users}: TGetServerSideProps) {
             </tbody>
           </Table>
 
-          {/*TODO add pagination*/}
+          <Pagination>
+            <Pagination.First/>
+            <Pagination.Prev/>
+            {paginationNumbers.map(number => (
+              <Pagination.Item
+                key={number}
+                onClick={handleChangePage(number)}
+                active={page === number}>{number}</Pagination.Item>
+            ))}
+            <Pagination.Next/>
+            <Pagination.Last/>
+          </Pagination>
 
         </Container>
       </main>
