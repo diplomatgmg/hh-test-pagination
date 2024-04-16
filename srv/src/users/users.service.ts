@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './users.entity';
 import { Repository } from 'typeorm';
+import { PAGINATION_LIMIT } from './config';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,11 @@ export class UserService {
   ) {}
 
   // get list of all users
-  async findAll(): Promise<UsersEntity[]> {
-    return await this.usersRepo.find();
+  async findAll(page: number = 1): Promise<UsersEntity[]> {
+    const skip = (page - 1) * PAGINATION_LIMIT;
+    return await this.usersRepo.find({
+      skip,
+      take: PAGINATION_LIMIT,
+    });
   }
 }
