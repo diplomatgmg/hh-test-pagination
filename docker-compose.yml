@@ -1,0 +1,9 @@
+services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/opt/project/web
+      - /opt/project/web/node_modules
+    ports:
+      - "3001:3001"
+    command: sh -c "npm run dev"
