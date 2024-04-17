@@ -1,9 +1,41 @@
 services:
   web:
-    build: ./web
-    volumes:
-      - ./web:/opt/project/web
-      - /opt/project/web/node_modules
+    build:
+      context: ./web
+    command: sh -c "npm run dev"
     ports:
       - "3001:3001"
-    command: sh -c "npm run dev"
+    volumes:
+      - ./web:/app/web
+      - /app/web/node_modules
+
+  srv:
+    build:
+      context: ./srv
+    command: sh -c "psql -U postgres -h database -f test_pagination_localhost-dump.sql && npm run build && npm run start:dev"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./srv:/app/srv
+      - /app/srv/node_modules
+    environment:
+      - PGPASSWORD=postgres
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres
+    restart: always
+    user: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: database
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5

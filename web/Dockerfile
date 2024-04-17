@@ -1,16 +1,13 @@
-FROM node:20.12.1-alpine
+ARG NODE_VERSION=20.12.1
 
-WORKDIR /opt/project/web
+FROM node:${NODE_VERSION}-alpine
 
-ENV PATH /opt/project/web/node_modules/.bin:$PATH
+# Use development node environment by default.
 
-COPY package.json ./
-COPY package-lock.json ./
-COPY tsconfig.json ./
-COPY next.config.mjs ./
-COPY public ./public
-COPY src ./src
+WORKDIR /app/web
 
+COPY . .
 RUN npm install
+
 
 EXPOSE 3001

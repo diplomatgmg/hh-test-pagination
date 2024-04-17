@@ -9,7 +9,7 @@ const pg = new URL(process.env.APP_PG_URL);
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: pg.hostname,
+      host: 'database',
       port: parseInt(pg.port),
       username: pg.username,
       password: pg.password,
