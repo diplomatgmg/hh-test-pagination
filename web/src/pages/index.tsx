@@ -7,7 +7,7 @@ import {GetServerSideProps, GetServerSidePropsContext} from "next";
 import * as querystring from "node:querystring";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
-import {getPaginationNumbers} from "@/pages/utils";
+import {getPaginationNumbers} from "@/pages/_utils";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -34,7 +34,7 @@ type TGetServerSideProps = {
 
 export const getServerSideProps = (async (ctx: GetServerSidePropsContext): Promise<{ props: TGetServerSideProps }> => {
   try {
-    const res = await fetch(`http://localhost:3000/users?${querystring.stringify(ctx.query)}`, {method: 'GET'})
+    const res = await fetch(`http://srv:3000/users?${querystring.stringify(ctx.query)}`, {method: 'GET'})
     if (!res.ok) {
       return {props: {statusCode: res.status, totalPages: 0, users: []}}
     }
